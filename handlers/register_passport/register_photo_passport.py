@@ -1,11 +1,9 @@
-import os
-
 from PIL import Image
 from aiogram import types
 from aiogram.dispatcher import FSMContext
-from pdf2image import convert_from_path
-from scripts import get_fio, get_serias, save_pdf
+
 import models
+from keyboards import ticket_kb
 from keyboards.inlines import (
     cancel_passport_ikb,
     fio_passport_ikb,
@@ -13,9 +11,8 @@ from keyboards.inlines import (
     series_passport_ikb,
 )
 from loader import bot, db, dp
+from scripts import get_fio, get_serias
 from states import RegisterPassport
-
-poppler_path = r'C:\Users\User\poppler\poppler-23.08.0\Library\bin'
 
 
 @dp.callback_query_handler(text='send_file_passport')
@@ -40,66 +37,8 @@ async def file_passport(call: types.CallbackQuery):
         await call.message.answer('Вы уже зарегистрировали паспортные данные')
 
 
-@dp.message_handler(
-    content_types=['document'], state=RegisterPassport.document
-)
-async def get_pdf(message: types.Message, state: FSMContext):
-    document = message.document
-    if document.mime_type == 'application/pdf':
-        await message.answer('Преобразую pdf в картинку...⏳')
-        path = await save_pdf(message)
-        images = convert_from_path(path, poppler_path=poppler_path)
-        path_image = f'documents/{message.from_user.id}.jpg'
-        images[0].save(path_image)
-        img = Image.open(path_image)
-        os.remove(path)
-        last_message = message.message_id + 1
-        await bot.edit_message_text(
-            'Получаю ваше ФИО⏳',
-            chat_id=message.chat.id,
-            message_id=last_message,
-        )
-        fullname = await get_fio(img)
-        fullname = ' '.join(
-            list(map(lambda x: x.lower().capitalize(), fullname.split()))
-        )
-        await state.update_data(full_name=fullname)
-        last_message = message.message_id + 1
-        await bot.edit_message_text(
-            'Получаю серию и номер паспорта⏳',
-            chat_id=message.chat.id,
-            message_id=last_message,
-        )
-        series_and_number = await get_serias(img)
-        series_and_number = (
-            series_and_number[0:2]
-            + ' '
-            + series_and_number[2:4]
-            + ' '
-            + series_and_number[4:]
-        )
-        await state.update_data(series_and_number=series_and_number)
-        img.close()
-        os.remove(path_image)
-        last_message = message.message_id + 1
-        await bot.edit_message_text(
-            'Данные извлечены успешно✅',
-            chat_id=message.chat.id,
-            message_id=last_message,
-        )
-        await message.answer(
-            f'{fullname} - Ваше ФИО?', reply_markup=fio_passport_ikb
-        )
-        await RegisterPassport.full_name.set()
-    else:
-        await message.answer(
-            'Пожалуйста, отправьте файл в формате PDF.',
-            reply_markup=cancel_passport_ikb,
-        )
-
-
 @dp.callback_query_handler(text='passport_cancel', state=RegisterPassport)
-async def start_register(call: types.CallbackQuery, state: FSMContext):
+async def cancel_register(call: types.CallbackQuery, state: FSMContext):
     last_message = call.message.message_id
     await bot.delete_message(call.message.chat.id, last_message)
     await state.finish()
@@ -229,7 +168,13 @@ async def yes_series(call: types.CallbackQuery, state: FSMContext):
     passport.series_and_number = data['series_and_number']
     db.add(passport)
     db.commit()
-    await call.message.answer('Паспортные данные успешно зарегистрированы')
+    await call.message.answer('Паспортные данные успешно зарегистрированы✅')
+    await call.message.answer(
+        'Поздравляю вы успешно прошли все этапы регистрации, '
+        'теперь при добавление билета будет показываться аткуальная информация'
+        'о товарах в вашем вагоне',
+        reply_markup=ticket_kb,
+    )
     await state.finish()
 
 
@@ -272,5 +217,12 @@ async def write_series(message: types.Message, state: FSMContext):
         passport.full_name = data['full_name']
         db.add(passport)
         db.commit()
-        await message.answer('Паспортные данные успешно зарегистрированы')
+        await message.answer('Паспортные данные успешно зарегистрированы✅')
+        await message.answer(
+            'Поздравляю вы успешно прошли все этапы регистрации, '
+            'теперь при добавление билета будет показываться аткуальная '
+            'информация'
+            'о товарах в вашем вагоне',
+            reply_markup=ticket_kb,
+        )
         await state.finish()

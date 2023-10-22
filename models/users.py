@@ -4,6 +4,7 @@ from loader import Base
 from sqlalchemy.orm import relationship
 
 from .passports import Passport
+from .tickets import Ticket
 
 
 class User(Base):
@@ -18,3 +19,4 @@ class User(Base):
     user_password = sqlalchemy.Column(sqlalchemy.String, nullable=False)
 
     passport = relationship('Passport', back_populates='user')
+    ticket = relationship('Ticket', back_populates='user')

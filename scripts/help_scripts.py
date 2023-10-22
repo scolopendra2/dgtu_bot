@@ -48,3 +48,23 @@ async def get_fio(img):
         if match:
             fio.append(match.group(1))
     return ' '.join(fio)
+
+
+async def get_ticket_data(img):
+    text = pytesseract.image_to_string(img, lang='rus')
+
+    train = re.search(r'[0-9]{3}[A-ZА-Я] ', text, re.IGNORECASE)
+    wagon = re.search(r' [0-9]{2} ', text, re.IGNORECASE)
+    place = re.search(r' [0-9]{3} ', text, re.IGNORECASE)
+
+    return {
+        'train': train.group()
+        if train is not None
+        else 'Не удалось распознать номер поезда',
+        'wagon': wagon.group()
+        if wagon is not None
+        else 'Не удалось распознать номер вагона',
+        'place': place.group()
+        if place is not None
+        else 'Не удалось распознать номер места',
+    }
