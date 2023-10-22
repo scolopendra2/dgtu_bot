@@ -4,7 +4,7 @@
 # Python/JS version
 [![Python Version](https://img.shields.io/badge/Python-3.10-blue)](https://www.python.org/downloads/release/python-3100/) ![JavaScript version](https://img.shields.io/badge/javascript-%3E%3D%20ES6-brightgreen)
 
-![Language stats](https://img.shields.io/badge/language_stats-javascript:50%25%20python:30%25%20html:20%25-brightgreen)
+![Language stats](https://img.shields.io/badge/language_stats-javascript:0%25%20python:100%25%20html:0%25-brightgreen)
 
 
 # ER диаграмма БД:

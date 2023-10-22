@@ -3,6 +3,7 @@ from aiogram.dispatcher import FSMContext
 
 import models
 from keyboards.inlines import ticket_ikb, cancel_ticket_ikb, check_ticket_ikb
+from keyboards import webapp_kb
 from loader import dp, bot, db
 from states import RegisterTicket
 
@@ -93,5 +94,6 @@ async def check_ticket(call: types.CallbackQuery, state: FSMContext):
     ticket.number_place = data['number_place']
     db.add(ticket)
     db.commit()
-    await call.message.answer('Вот актуальные товары в вашем поезде')
+    await call.message.answer('Ваш билет успешно добавлен, теперь '
+                              'вы можете ознакомиться с каталогом', reply_markup=webapp_kb)
     await state.finish()
