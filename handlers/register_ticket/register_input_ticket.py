@@ -94,6 +94,9 @@ async def check_ticket(call: types.CallbackQuery, state: FSMContext):
     ticket.number_place = data['number_place']
     db.add(ticket)
     db.commit()
-    await call.message.answer('Ваш билет успешно добавлен, теперь '
-                              'вы можете ознакомиться с каталогом', reply_markup=webapp_kb)
+    await call.message.answer(
+        'Ваш билет успешно добавлен, теперь '
+        'вы можете ознакомиться с каталогом',
+        reply_markup=webapp_kb,
+    )
     await state.finish()
